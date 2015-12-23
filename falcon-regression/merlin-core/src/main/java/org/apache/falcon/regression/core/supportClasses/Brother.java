@@ -18,6 +18,7 @@
 
 package org.apache.falcon.regression.core.supportClasses;
 
+import org.apache.falcon.entity.v0.Entity;
 import org.apache.falcon.entity.v0.EntityType;
 import org.apache.falcon.regression.core.bundle.Bundle;
 import org.apache.falcon.regression.core.helpers.ColoHelper;
@@ -30,7 +31,8 @@ import org.apache.log4j.Logger;
 /** Class for running a rest request in a parallel thread. */
 public class Brother extends Thread {
     private String operation;
-    private String data;
+    private Entity entity;
+    private Entity data;
     private URLS url;
     private ServiceResponse output;
     private static final Logger LOGGER = Logger.getLogger(Brother.class);
@@ -47,16 +49,18 @@ public class Brother extends Thread {
         this.operation = operation;
         switch (entityType) {
         case PROCESS:
-            this.data = b.getProcessData();
+            this.entity = b.getProcess();
+            this.data = b.getProcess();
             this.entityManagerHelper = p.getProcessHelper();
             break;
         case CLUSTER:
             this.entityManagerHelper = p.getClusterHelper();
-            this.data = b.getClusters().get(0);
+            this.entity = b.getClusters().get(0);
             break;
         case FEED:
             this.entityManagerHelper = p.getFeedHelper();
-            this.data = b.getDataSets().get(0);
+            this.entity = b.getFeeds().get(0);
+            this.data = b.getFeeds().get(0);
             break;
         default:
             LOGGER.error("Unexpected entityType=" + entityType);
@@ -76,28 +80,29 @@ public class Brother extends Thread {
         try {
             switch (url) {
             case SUBMIT_URL:
-                output = entityManagerHelper.submitEntity(data);
+                output = entityManagerHelper.submitEntity(entity);
                 break;
             case GET_ENTITY_DEFINITION:
-                output = entityManagerHelper.getEntityDefinition(data);
+                output = entityManagerHelper.getEntityDefinition(entity);
                 break;
             case DELETE_URL:
-                output = entityManagerHelper.delete(data);
+                output = entityManagerHelper.delete(entity.getName());
+                output = entityManagerHelper.delete(data.getName());
                 break;
             case SUSPEND_URL:
-                output = entityManagerHelper.suspend(data);
+                output = entityManagerHelper.suspend(entity);
                 break;
             case SCHEDULE_URL:
-                output = entityManagerHelper.schedule(data);
+                output = entityManagerHelper.schedule(entity);
                 break;
             case RESUME_URL:
-                output = entityManagerHelper.resume(data);
+                output = entityManagerHelper.resume(entity);
                 break;
             case SUBMIT_AND_SCHEDULE_URL:
-                output = entityManagerHelper.submitAndSchedule(data);
+                output = entityManagerHelper.submitAndSchedule(entity);
                 break;
             case STATUS_URL:
-                output = entityManagerHelper.getStatus(data);
+                output = entityManagerHelper.getStatus(entity);
                 break;
             default:
                 LOGGER.error("Unexpected url: " + url);
